@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Případ OO-BL-0247/94 — Vyřešení případu</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1410;
+    color: #d4c9a8;
+    font-family: 'Georgia', serif;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  .wrap { max-width: 580px; margin: 0 auto; }
+
+  /* INTRO */
+  .intro-screen {
+    display: block;
+  }
+
+  .header {
+    text-align: center;
+    border-bottom: 1px solid #5a4a2a;
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+  .header .stamp {
+    font-size: clamp(10px, 2.5vw, 12px);
+    letter-spacing: 3px;
+    color: #8a7a5a;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: clamp(16px, 4.5vw, 20px);
+    letter-spacing: 1px;
+    color: #e8d9a0;
+    margin-bottom: 6px;
+  }
+  .header .subtitle {
+    font-size: clamp(12px, 3vw, 14px);
+    color: #8a7a5a;
+    font-style: italic;
+  }
+
+  .intro-text {
+    background: #22190f;
+    border: 1px solid #4a3a1a;
+    border-radius: 4px;
+    padding: 20px 18px;
+    margin-bottom: 20px;
+    font-size: clamp(13px, 3.5vw, 15px);
+    line-height: 1.8;
+    color: #c4b48a;
+  }
+
+  .start-btn {
+    display: block;
+    width: 100%;
+    background: #2e2010;
+    border: 1px solid #8a7a5a;
+    color: #e8d9a0;
+    padding: 16px 20px;
+    border-radius: 3px;
+    font-family: 'Georgia', serif;
+    font-size: clamp(14px, 4vw, 16px);
+    cursor: pointer;
+    text-align: center;
+    letter-spacing: 1px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* QUESTIONS */
+  .quiz-screen { display: none; }
+
+  .question-block { display: none; }
+  .question-block.active { display: block; }
+
+  .question-header {
+    background: #2e2010;
+    padding: 14px 18px;
+    border-bottom: 1px solid #4a3a1a;
+    border-radius: 4px 4px 0 0;
+  }
+  .question-num {
+    font-size: clamp(10px, 2.5vw, 12px);
+    letter-spacing: 2px;
+    color: #8a7a5a;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .question-text {
+    font-size: clamp(14px, 4vw, 16px);
+    color: #e8d9a0;
+    line-height: 1.5;
+  }
+
+  .question-body {
+    background: #22190f;
+    border: 1px solid #4a3a1a;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+  }
+
+  .options {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .option-btn {
+    background: #1a1410;
+    border: 1px solid #5a4a2a;
+    color: #c4b48a;
+    padding: 14px 16px;
+    border-radius: 3px;
+    font-family: 'Georgia', serif;
+    font-size: clamp(13px, 3.5vw, 15px);
+    text-align: left;
+    cursor: pointer;
+    line-height: 1.45;
+    width: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .option-btn:active { background: #2a1e0f; }
+  .option-btn.correct { background: #0f2a1a; border-color: #4a9a6a; color: #8adaaa; pointer-events: none; }
+  .option-btn.wrong { background: #2a0f0f; border-color: #9a4a4a; color: #c48a8a; pointer-events: none; }
+  .option-btn.disabled { opacity: 0.45; pointer-events: none; }
+
+  .feedback {
+    margin: 0 18px 16px;
+    padding: 14px 16px;
+    border-radius: 3px;
+    font-size: clamp(12px, 3vw, 14px);
+    line-height: 1.65;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #0a2015; border: 1px solid #3a7a5a; color: #8adaaa; }
+  .feedback.wrong-fb { background: #200a0a; border: 1px solid #7a3a3a; color: #c48a8a; }
+  .feedback .doc-hint {
+    margin-top: 8px;
+    font-size: clamp(11px, 2.8vw, 13px);
+    color: #9a8a6a;
+    font-style: italic;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 8px;
+  }
+  .feedback .reveal {
+    margin-top: 10px;
+    color: #d4c9a8;
+    font-size: clamp(12px, 3vw, 14px);
+    line-height: 1.65;
+  }
+
+  .next-btn {
+    display: block;
+    margin: 0 18px 18px;
+    background: #2e2010;
+    border: 1px solid #8a7a5a;
+    color: #e8d9a0;
+    padding: 14px 20px;
+    border-radius: 3px;
+    font-family: 'Georgia', serif;
+    font-size: clamp(13px, 3.5vw, 15px);
+    cursor: pointer;
+    width: calc(100% - 36px);
+    text-align: center;
+    letter-spacing: 1px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* FINAL */
+  .final-screen { display: none; }
+  .final-screen.show { display: block; }
+
+  .final-block {
+    background: #22190f;
+    border: 2px solid #8a7a5a;
+    border-radius: 4px;
+    padding: 28px 20px;
+    text-align: center;
+  }
+  .final-block .final-stamp {
+    font-size: clamp(10px, 2.5vw, 12px);
+    letter-spacing: 4px;
+    color: #8a7a5a;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .final-block h2 {
+    font-size: clamp(17px, 5vw, 22px);
+    color: #e8d9a0;
+    margin-bottom: 18px;
+    line-height: 1.4;
+  }
+  .final-block p {
+    font-size: clamp(13px, 3.5vw, 15px);
+    line-height: 1.8;
+    color: #c4b48a;
+    margin-bottom: 14px;
+    text-align: left;
+  }
+  .final-block .promlceno {
+    margin-top: 20px;
+    padding: 14px;
+    background: #1a1410;
+    border: 1px solid #5a4a2a;
+    border-radius: 3px;
+    font-size: clamp(12px, 3vw, 14px);
+    color: #8a7a5a;
+    font-style: italic;
+    line-height: 1.75;
+    text-align: left;
+  }
+  .final-block .closing {
+    margin-top: 24px;
+    font-size: clamp(14px, 4vw, 16px);
+    color: #e8d9a0;
+    line-height: 1.7;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- INTRO -->
+  <div class="intro-screen" id="introScreen">
+    <div class="header">
+      <div class="stamp">Policie České republiky · OO Blatná Lhota</div>
+      <h1>PŘÍPAD Č. OO-BL-0247/94</h1>
+      <div class="subtitle">Smrt v osadě Ztracená naděje · srpen 1994</div>
+    </div>
+    <div class="intro-text">
+      Dočetl ses až na konec spisu. Máš před sebou výslechy, protokoly, znalecké posudky i terénní poznámky ppor. Prokopa. Všechno, co tehdy bylo k dispozici.<br><br>
+      Myslíš, že víš, co, jak a proč se té noci skutečně stalo? Dokaž to.
+    </div>
+    <button class="start-btn" onclick="startQuiz()">Dokaž to →</button>
+  </div>
+
+  <!-- KVÍZ -->
+  <div class="quiz-screen" id="quizScreen">
+
+    <div class="question-block active" id="q1">
+      <div class="question-header">
+        <div class="question-num">Otázka 1 z 5</div>
+        <div class="question-text">Kdo zavraždil Bohumila Drozda?</div>
+      </div>
+      <div class="question-body">
+        <div class="options">
+          <button class="option-btn" onclick="answer(1,this,false)">Simona Drozdová</button>
+          <button class="option-btn" onclick="answer(1,this,false)">Milan „Vekslák" Hudec</button>
+          <button class="option-btn" onclick="answer(1,this,false)">Jaroslav Moravec</button>
+          <button class="option-btn" onclick="answer(1,this,false)">Ing. Radim Forejt</button>
+          <button class="option-btn" onclick="answer(1,this,false)">Beata „Bába" Sklenářová</button>
+          <button class="option-btn" onclick="answer(1,this,true)">Helena Blažková a Karel „Kája" Vydra</button>
+        </div>
+        <div class="feedback" id="fb1"></div>
+      </div>
+    </div>
+
+    <div class="question-block" id="q2">
+      <div class="question-header">
+        <div class="question-num">Otázka 2 z 5</div>
+        <div class="question-text">Čím Drozd vydíral Helenu Blažkovou?</div>
+      </div>
+      <div class="question-body">
+        <div class="options">
+          <button class="option-btn" onclick="answer(2,this,false)">Věděl o jejím tajném poměru s Milanem Hudcem</button>
+          <button class="option-btn" onclick="answer(2,this,true)">Věděl o nelegálním prodeji nekolkovaného alkoholu a kradených cigaret</button>
+          <button class="option-btn" onclick="answer(2,this,false)">Chtěl odkoupit budovu konzumu</button>
+          <button class="option-btn" onclick="answer(2,this,false)">Měl důkazy o daňových podvodech konzumu</button>
+        </div>
+        <div class="feedback" id="fb2"></div>
+      </div>
+    </div>
+
+    <div class="question-block" id="q3">
+      <div class="question-header">
+        <div class="question-num">Otázka 3 z 5</div>
+        <div class="question-text">Proč se Karel „Kája" Vydra rozhodl Heleně pomoci?</div>
+      </div>
+      <div class="question-body">
+        <div class="options">
+          <button class="option-btn" onclick="answer(3,this,false)">Byl do Heleny zamilovaný</button>
+          <button class="option-btn" onclick="answer(3,this,false)">Helena mu zaplatila velkou sumu peněz</button>
+          <button class="option-btn" onclick="answer(3,this,true)">Drozd mu vyhrožoval zničením mola a zákazem rybolovu na řece</button>
+          <button class="option-btn" onclick="answer(3,this,false)">Kája nevěděl, že půjde o vraždu — myslel, že jde jen o strašení</button>
+        </div>
+        <div class="feedback" id="fb3"></div>
+      </div>
+    </div>
+
+    <div class="question-block" id="q4">
+      <div class="question-header">
+        <div class="question-num">Otázka 4 z 5</div>
+        <div class="question-text">Jak byl Drozd uvězněn v kadibudce, když v blátě kolem nebyly žádné cizí stopy?</div>
+      </div>
+      <div class="question-body">
+        <div class="options">
+          <button class="option-btn" onclick="answer(4,this,false)">Závora spadla pod vlastní vahou</button>
+          <button class="option-btn" onclick="answer(4,this,false)">Pachatel utřel stopy a odešel lesem</button>
+          <button class="option-btn" onclick="answer(4,this,true)">Kája Vydra přijel po řece na loďce a prutem přes větev olše zaklapl závoru z vody</button>
+          <button class="option-btn" onclick="answer(4,this,false)">Drozd se zavřel omylem sám</button>
+        </div>
+        <div class="feedback" id="fb4"></div>
+      </div>
+    </div>
+
+    <div class="question-block" id="q5">
+      <div class="question-header">
+        <div class="question-num">Otázka 5 z 5</div>
+        <div class="question-text">Odkud pocházela sedativa nalezená v Drozdově krvi?</div>
+      </div>
+      <div class="question-body">
+        <div class="options">
+          <button class="option-btn" onclick="answer(5,this,false)">Drozd je bral pravidelně sám na spaní</button>
+          <button class="option-btn" onclick="answer(5,this,false)">Koupil je v lékárně v Blatné Lhotě</button>
+          <button class="option-btn" onclick="answer(5,this,true)">Helena Blažková je získala od Beaty Sklenářové a přidala je Drozdovi do rumu</button>
+          <button class="option-btn" onclick="answer(5,this,false)">Simona Drozdová mu je přidala do večeře</button>
+        </div>
+        <div class="feedback" id="fb5"></div>
+      </div>
+    </div>
+
+  </div><!-- /quiz-screen -->
+
+  <!-- ZÁVĚR -->
+  <div class="final-screen" id="finalScreen">
+    <div class="final-block">
+      <div class="final-stamp">✦ Nevyřešený případ rozluštěn ✦</div>
+      <h2>Špičková detektivní práce.</h2>
+      <p>Tam, kde mladý ppor. Prokop zastavil — ty jsi šel dál. Spojil jsi mokrou loďku, žlutá vlákna na závoře, storno z pokladní knihy, šepot báby Sklenářové i Moravcovo svědectví od řeky. Viděl jsi to, co tehdy nikdo vidět nechtěl.</p>
+      <p>Helena Blažková a Karel Vydra naplánovali a provedli vraždu Bohumila Drozda s chladnou hlavou. Žádné stopy v blátě. Žádní svědci. Dokonalý zločin — až na drobnosti, které po sobě zanechá každý.</p>
+      <div class="promlceno">
+        Případ OO-BL-0247/94 byl odložen dne 30. listopadu 1994 pro nedostatek důkazů.<br><br>
+        Trestný čin vraždy dle § 219 tr. zák. se promlčuje po 20 letech.<br><br>
+        <strong>Věc je od roku 2014 promlčena. Trestní stíhání již nelze zahájit.</strong><br><br>
+        Škoda, že tehdy nebyl vyšetřující o něco bystrější.
+      </div>
+      <div class="closing">Doufáme, že u policie budou sloužit<br>už jen detektivové jako jsi Ty.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var feedbacks = {
+  1: {
+    wrong: { text: "Toto není správná odpověď.", hint: "Prostuduj výslechy všech podezřelých. Všimni si, kdo měl motiv, prostředky i příležitost. Klíčové jsou záznamy z ohledání místa činu a záznamy o zajištění věci." },
+    correct: { text: "Správně!", reveal: "Helena Blažková byla hlavním mozkem vraždy — měla motiv (vydírání), přístup k sedativům i odvahu jednat. Karel Vydra byl spolupachatel — znal řeku, měl loďku a svůj vlastní důvod Drozdovi ublížit. Viz výslechy obou podezřelých a záznamy o zajištění věci." }
+  },
+  2: {
+    wrong: { text: "Toto není správná odpověď.", hint: "Pozorně si přečti výslech Heleny Blažkové a opakovaný výslech Jaroslava Moravce. Jeden z nich se v určitém momentě uřekl." },
+    correct: { text: "Správně!", reveal: "Drozd zjistil, že Helena ve svém konzumu točí nekolkovaný alkohol a prodává kradené cigarety z kamionů. Pohrozil jí policií — pokud mu nepřepíše svůj pozemek sousedící s osadou, jediný který Drozdovi při restitucích unikl, práskne ji. Viz výslech Heleny Blažkové a opakovaný výslech Moravce." }
+  },
+  3: {
+    wrong: { text: "Toto není správná odpověď.", hint: "Přečti si první i opakovaný výslech Karla Vydry. Co mu Drozd vyhrožoval? A co pro Káju znamenala řeka a jeho molo?" },
+    correct: { text: "Správně!", reveal: "Drozd jako vlastník pozemků hodlal Kájovi zlikvidovat molo a zakázat přístup k řece — k místu, které Kája miloval celý život. Pro rybáře a kutila to bylo nepřijatelné. Když za ním přišla Helena s návrhem, neodmítl. Viz výslechy Karla Vydry." }
+  },
+  4: {
+    wrong: { text: "Toto není správná odpověď.", hint: "Znovu si projdi protokol o ohledání místa činu — popis závory a okolního terénu. A pak se podívej, co bylo zajištěno v Kájově kůlně a co potvrdilo odborné vyjádření z oboru chemie a biologie." },
+    correct: { text: "Správně!", reveal: "Louka kolem kadibudky byla plná bláta — žádný přístup po zemi bez zanechání stop. Kája připlul na pramici podél břehu, přehodil nylonové lano přes větev olše a smyčkou zachytil dřevěnou závoru. Jedním tahem z loďky ji zaklapl. Viz protokol o ohledání místa činu a záznamy o zajištění věci." }
+  },
+  5: {
+    wrong: { text: "Toto není správná odpověď.", hint: "Prostuduj zprávu o pitvě a výslechy Beaty Sklenářové. Co prodávala bába Sklenářová? A kdo za ní chodil?" },
+    correct: { text: "Správně!", reveal: "Bába Sklenářová podomácku vyráběla a prodávala silná sedativa. Helena od ní diazepam koupila a té osudné noci ho namíchala Drozdovi do rumu. Omámený Drozd pak v kadibudce neměl šanci — zapotácel se, prohnilá podlaha se prolomila a on spadl do jímky. Viz zpráva o pitvě a výslechy Beaty Sklenářové." }
+  }
+};
+
+function startQuiz() {
+  document.getElementById('introScreen').style.display = 'none';
+  var qs = document.getElementById('quizScreen');
+  qs.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function answer(qNum, btn, isCorrect) {
+  var block = document.getElementById('q' + qNum);
+  var fb = document.getElementById('fb' + qNum);
+  var allBtns = block.querySelectorAll('.option-btn');
+
+  // Disable all while processing
+  allBtns.forEach(function(b) { b.classList.add('disabled'); });
+
+  if (isCorrect) {
+    btn.classList.remove('disabled');
+    btn.classList.add('correct');
+    fb.className = 'feedback correct-fb show';
+    var d = feedbacks[qNum].correct;
+    fb.innerHTML = '<strong>✓ ' + d.text + '</strong><div class="reveal">' + d.reveal + '</div>';
+
+    var actionBtn = document.createElement('button');
+    actionBtn.className = 'next-btn';
+
+    if (qNum < 5) {
+      actionBtn.textContent = 'Další otázka →';
+      actionBtn.onclick = function() {
+        block.classList.remove('active');
+        var next = document.getElementById('q' + (qNum + 1));
+        next.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+    } else {
+      actionBtn.textContent = 'Zobrazit závěr →';
+      actionBtn.onclick = function() {
+        document.getElementById('quizScreen').style.display = 'none';
+        var fin = document.getElementById('finalScreen');
+        fin.classList.add('show');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+    }
+    block.querySelector('.question-body').appendChild(actionBtn);
+
+  } else {
+    // Mark clicked button as wrong
+    btn.classList.remove('disabled');
+    btn.classList.add('wrong');
+
+    // Show hint
+    fb.className = 'feedback wrong-fb show';
+    var d = feedbacks[qNum].wrong;
+    fb.innerHTML = '<strong>✗ ' + d.text + '</strong><div class="doc-hint">Nápověda: ' + d.hint + '</div>';
+
+    // Re-enable remaining buttons
+    allBtns.forEach(function(b) {
+      if (!b.classList.contains('wrong') && !b.classList.contains('correct')) {
+        b.classList.remove('disabled');
+      }
+    });
+
+    // Hide hint when any other button is clicked (will re-show on next wrong)
+    function hideFbOnce() {
+      fb.className = 'feedback';
+    }
+    allBtns.forEach(function(b) {
+      if (!b.classList.contains('wrong')) {
+        b.addEventListener('click', hideFbOnce, { once: true });
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>
